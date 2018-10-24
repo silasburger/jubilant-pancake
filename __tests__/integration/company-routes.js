@@ -69,6 +69,39 @@ describe('post /', () => {
     let data = await db.query('select * from companies');
     expect(data.rows.length).toEqual(3);
   });
+
+  it('Ensures that JSON validation is working', async function() {
+    let response = await request(app)
+      .post('/companies')
+      .send({
+        handle: 12,
+        name: 'Big Brown Firs',
+        num_employees: '1',
+        description: 'We are a tree supplier',
+        logo_url:
+          'https://www.paulickreport.com/wp-content/uploads/2013/02/BigBrown.jpg'
+      });
+    expect(response.status).toEqual(500);
+  });
+});
+
+describe('patch /', () => {
+  it('Ensures that patch updates correctly', async function() {
+    let response = await request(app)
+      .patch('/companies/LLL')
+      .send({
+        description: 'THE LAMEST YOGA COMPANY EVER!'
+      });
+    expect(response.status).toEqual(200);
+    expect(response.body.company.handle).toEqual('LLL');
+    expect(response.body.company.description).toEqual(
+      'THE LAMEST YOGA COMPANY EVER!'
+    );
+    let query = await db.query(
+      "SELECT description FROM companies WHERE handle = 'LLL'"
+    );
+    expect(query.rows[0].description).toEqual('THE LAMEST YOGA COMPANY EVER!');
+  });
 });
 
 afterEach(async () => {

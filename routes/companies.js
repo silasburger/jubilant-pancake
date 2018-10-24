@@ -35,28 +35,28 @@ router.post('/', validateJsonSchema(postCompanySchema), async function(
   }
 });
 
-router.patch('/:handle', async function(req, res, next) {
+router.patch('/:handle', validateJsonSchema(patchCompanySchema), async function(
+  req,
+  res,
+  next
+) {
   try {
     const result = await Company.updateCompany(req.body, req.params.handle);
+
+    return res.json({ company: result });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+router.delete('/:handle', async function(req, res, next) {
+  try {
+    const result = await Company.deleteCompany(req.params.handle);
 
     return res.json(result);
   } catch (err) {
     return next(err);
   }
 });
-
-router.delete(
-  '/:handle',
-  validateJsonSchema(patchCompanySchema),
-  async function(req, res, next) {
-    try {
-      const result = await Company.deleteCompany(req.params.handle);
-
-      return res.json(result);
-    } catch (err) {
-      return next(err);
-    }
-  }
-);
 
 module.exports = router;

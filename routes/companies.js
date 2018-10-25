@@ -7,7 +7,7 @@ const validateJsonSchema = require('../helpers/validateJsonSchema');
 
 // Takes query string and returns filtered result in JSON
 // => {companies: [companyData, ...]}
-router.get('/', async function(req, res, next) {
+router.get('/', async function (req, res, next) {
   try {
     const { search, min_employees, max_employees } = req.query;
 
@@ -23,9 +23,21 @@ router.get('/', async function(req, res, next) {
   }
 });
 
+router.get('/:handle', async function (req, res, next) {
+  try {
+    const handle = req.params.handle;
+
+    const result = await Company.get(handle);
+
+    return res.json({ company: result });
+  } catch (err) {
+    return next(err);
+  }
+});
+
 //Add company to database, using validation middleware to check req.body.
 // => {company: companyData}
-router.post('/', validateJsonSchema(postCompanySchema), async function(
+router.post('/', validateJsonSchema(postCompanySchema), async function (
   req,
   res,
   next
@@ -40,7 +52,7 @@ router.post('/', validateJsonSchema(postCompanySchema), async function(
 
 //Update company in database, using validation middleware to check req.body.
 // => {company: companyData}
-router.patch('/:handle', validateJsonSchema(patchCompanySchema), async function(
+router.patch('/:handle', validateJsonSchema(patchCompanySchema), async function (
   req,
   res,
   next
@@ -56,7 +68,7 @@ router.patch('/:handle', validateJsonSchema(patchCompanySchema), async function(
 
 // Delete company from database
 // => {message: "Company deleted"}
-router.delete('/:handle', async function(req, res, next) {
+router.delete('/:handle', async function (req, res, next) {
   try {
     const result = await Company.delete(req.params.handle);
 

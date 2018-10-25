@@ -9,10 +9,18 @@ describe('partialUpdate()', () => {
       'name',
       13
     );
+
     expect(Object.keys(result)).toEqual(['query', 'values']);
     expect(result.query).toEqual(
       'UPDATE jobs SET something=$1, notebook=$2 WHERE name=$3 RETURNING *'
     );
     expect(result.values).toEqual(['something', 'ryan', 13]);
+  });
+
+  it('should generate a proper partial update query with just 1 missing field', function() {
+    // FIXME: write real tests!
+    const result = sqlForPartialUpdate('jobs', {}, 'name', 13);
+    // expect(Object.keys(result)).toEqual(['query', 'values']);
+    expect(result.query).toEqual('UPDATE jobs SET  WHERE name=$1 RETURNING *');
   });
 });

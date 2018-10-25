@@ -6,14 +6,15 @@ const Company = require('../models/company.js');
 const validateJsonSchema = require('../helpers/validateJsonSchema');
 
 // Takes query string and returns filtered result in JSON
+// => {companies: [companyData, ...]}
 router.get('/', async function(req, res, next) {
   try {
     const { search, min_employees, max_employees } = req.query;
 
-    const result = await Company.handleSearch(
+    const result = await Company.getMatchedCompanies(
       search,
-      +min_employees || 0,
-      +max_employees
+      min_employees,
+      max_employees
     );
 
     return res.json({ companies: result });
@@ -23,25 +24,29 @@ router.get('/', async function(req, res, next) {
 });
 
 //Add company to database, using validation middleware to check req.body.
+// => {company: companyData}
 router.post('/', validateJsonSchema(postCompanySchema), async function(
   req,
   res,
   next
 ) {
   try {
-    return res.json(await Company.createCompany(req.body));
+    const result = await Company.create(req.body);
+    return res.json(result);
   } catch (err) {
     return next(err);
   }
 });
 
+//Update company in database, using validation middleware to check req.body.
+// => {company: companyData}
 router.patch('/:handle', validateJsonSchema(patchCompanySchema), async function(
   req,
   res,
   next
 ) {
   try {
-    const result = await Company.updateCompany(req.body, req.params.handle);
+    const result = await Company.update(req.body, req.params.handle);
 
     return res.json({ company: result });
   } catch (err) {
@@ -49,9 +54,11 @@ router.patch('/:handle', validateJsonSchema(patchCompanySchema), async function(
   }
 });
 
+// Delete company from database
+// => {message: "Company deleted"}
 router.delete('/:handle', async function(req, res, next) {
   try {
-    const result = await Company.deleteCompany(req.params.handle);
+    const result = await Company.delete(req.params.handle);
 
     return res.json(result);
   } catch (err) {

@@ -41,12 +41,21 @@ class Company {
 
   // Gets company in the database and company data
   static async get(handle) {
-    const result = await db.query(
-      `SELECT handle, name, num_employees, description, logo_url 
+    const companyRes = await db.query(
+      `SELECT handle, name, num_employees, description, logo_url
        FROM companies 
        WHERE handle = $1`,
       [handle]
     );
+
+    const jobRes = await db.query(
+      `SELECT title, salary, equity, company_handle, date_posted
+       FROM jobs 
+       WHERE company_handle = $1`,
+      [handle]
+    );
+
+    const result = result.rows[0].push({ jobs: jobRes.rows })
 
     return result.rows[0];
   }

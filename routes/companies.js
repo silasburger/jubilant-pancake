@@ -78,4 +78,6 @@ router.delete('/:handle', async function (req, res, next) {
   }
 });
 
+// can potentialy change view/model functions so that only one is responsible for making
+// response object format correctly
 module.exports = router;

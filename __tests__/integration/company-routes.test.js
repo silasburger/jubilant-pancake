@@ -4,18 +4,6 @@ const db = require('../../db');
 
 process.env.NODE_ENV = 'test';
 
-beforeAll(async () => {
-  await db.query(`
-    CREATE TABLE companies (
-    handle TEXT PRIMARY KEY,
-    name TEXT NOT NULL UNIQUE,
-    num_employees INTEGER, 
-    description TEXT, 
-    logo_url TEXT
-  ) 
-  `);
-});
-
 beforeEach(async () => {
   await db.query(`
   INSERT INTO companies (handle, name, num_employees, description, logo_url) 
@@ -152,10 +140,10 @@ describe('get /:handle', () => {
 });
 
 afterEach(async () => {
+  await db.query(`DELETE FROM jobs`);
   await db.query(`DELETE FROM companies`);
 });
 
 afterAll(async () => {
-  await db.query(`DROP TABLE companies`);
-  db.end();
+  await db.end();
 });

@@ -10,9 +10,7 @@ const validateJsonSchema = require('../helpers/validateJsonSchema');
 // => {jobs: [JobData, ...]}
 router.get('/', async function (req, res, next) {
   try {
-
-    const result = await Job.getMatchedJobs(req.body);
-
+    const result = await Job.getMatchedJobs(req.query);
     return res.json(result);
   } catch (err) {
     return next(err);
@@ -21,9 +19,7 @@ router.get('/', async function (req, res, next) {
 
 router.get('/:id', async function (req, res, next) {
   try {
-
     const result = await Job.get(req.params.id);
-
     return res.json(result);
   } catch (err) {
     return next(err);
@@ -46,7 +42,6 @@ router.post('/', validateJsonSchema(postJobSchema), async function (req, res, ne
 router.patch('/:id', validateJsonSchema(patchJobSchema), async function (req, res, next) {
   try {
     const result = await Job.update(req.body, req.params.id);
-
     return res.json(result);
   } catch (err) {
     return next(err);
@@ -58,7 +53,6 @@ router.patch('/:id', validateJsonSchema(patchJobSchema), async function (req, re
 router.delete('/:id', async function (req, res, next) {
   try {
     const result = await Job.delete(req.params.id);
-
     return res.json(result);
   } catch (err) {
     return next(err);

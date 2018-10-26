@@ -24,7 +24,7 @@ class Company {
       [min_employees, max_employees, search]
     );
 
-    return result.rows;
+    return { companies: result.rows };
   }
 
   // Creates company in the database and returns {company: Companydata}
@@ -55,9 +55,17 @@ class Company {
       [handle]
     );
 
-    const result = result.rows[0].push({ jobs: jobRes.rows })
+    if (companyRes.rows.length === 0) {
+      let notFoundError = new Error(
+        `There exists no companies with a handle of ${handle}`
+      );
+      notFoundError.status = 404;
+      throw notFoundError;
+    }
 
-    return result.rows[0];
+
+    return { company: companyRes.rows[0], jobs: jobRes.rows }
+
   }
   // Takes object with values to change and the handle of company
   // Returns company data of updated company
@@ -76,7 +84,7 @@ class Company {
       throw notFoundError;
     }
 
-    return result.rows[0];
+    return { company: result.rows[0] };
   }
 
   // Deletes company from databse and returns confirmation message

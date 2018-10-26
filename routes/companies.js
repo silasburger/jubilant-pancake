@@ -17,7 +17,7 @@ router.get('/', async function (req, res, next) {
       max_employees
     );
 
-    return res.json({ companies: result });
+    return res.json(result);
   } catch (err) {
     return next(err);
   }
@@ -26,10 +26,9 @@ router.get('/', async function (req, res, next) {
 router.get('/:handle', async function (req, res, next) {
   try {
     const handle = req.params.handle;
-
     const result = await Company.get(handle);
 
-    return res.json({ company: result });
+    return res.json(result);
   } catch (err) {
     return next(err);
   }
@@ -37,11 +36,7 @@ router.get('/:handle', async function (req, res, next) {
 
 //Add company to database, using validation middleware to check req.body.
 // => {company: companyData}
-router.post('/', validateJsonSchema(postCompanySchema), async function (
-  req,
-  res,
-  next
-) {
+router.post('/', validateJsonSchema(postCompanySchema), async function (req, res, next) {
   try {
     const result = await Company.create(req.body);
     return res.json(result);
@@ -52,15 +47,10 @@ router.post('/', validateJsonSchema(postCompanySchema), async function (
 
 //Update company in database, using validation middleware to check req.body.
 // => {company: companyData}
-router.patch('/:handle', validateJsonSchema(patchCompanySchema), async function (
-  req,
-  res,
-  next
-) {
+router.patch('/:handle', validateJsonSchema(patchCompanySchema), async function (req, res, next) {
   try {
     const result = await Company.update(req.body, req.params.handle);
-
-    return res.json({ company: result });
+    return res.json(result);
   } catch (err) {
     return next(err);
   }

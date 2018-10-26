@@ -4,27 +4,10 @@ const db = require('../../db');
 
 process.env.NODE_ENV = 'test';
 
-beforeAll(async () => {
-  await db.query(`
-    CREATE TABLE companies (
-    handle TEXT PRIMARY KEY,
-    name TEXT NOT NULL UNIQUE,
-    num_employees INTEGER, 
-    description TEXT, 
-    logo_url TEXT
-  ) 
-  `);
-  await db.query(`
-  CREATE TABLE jobs (
-  id INTEGER PRIMARY KEY AUTO_INCREMENT,
-  name TEXT NOT NULL,
-  salary FLOAT NOT NULL, 
-  equity FLOAT NOT NULL CHECK (equity<=1), 
-  company_handle TEXT FOREIGN KEY REFERENCES companies ON DELETE CASCADE,
-  date_posted timestamp without time zone NOT NULL
-  )
-  `)
-});
+let first_job_id;
+let second_job_id;
+let third_job_id;
+let no_job_id;
 
 beforeEach(async () => {
   await db.query(`
@@ -42,21 +25,26 @@ beforeEach(async () => {
   VALUES ('VOL', 'Volunteers', 0, 'put a smile on!', 'http://webneel.com/daily/sites/default/files/images/daily/06-2013/3-mcdonalds-mcdiabetes-logo-parody.jpg') 
   RETURNING handle, name, num_employees, description, logo_url
   `);
-  await db.query(`
+  const firstJobQuery = await db.query(`
   INSERT INTO jobs (title, salary, equity, company_handle, date_posted) 
-  VALUES ('Janitor', 3000, 0, MCD, LOCALTIMESTAMP) 
-  RETURNING handle, name, num_employees, description, logo_url
+  VALUES ('Janitor', 3000, 0, 'MCD', LOCALTIMESTAMP) 
+  RETURNING id, title, salary, equity, company_handle, date_posted
   `);
-  await db.query(`
+  const secondJobQuery = await db.query(`
   INSERT INTO jobs (title, salary, equity, company_handle, date_posted) 
-  VALUES ('SWE', 300000, 0.5, LLL, LOCALTIMESTAMP) 
-  RETURNING handle, name, num_employees, description, logo_url
+  VALUES ('SWE', 300000, 0.5, 'LLL', LOCALTIMESTAMP) 
+  RETURNING id, title, salary, equity, company_handle, date_posted
   `);
-  await db.query(`
+  const thirdJobQuery = await db.query(`
   INSERT INTO jobs (title, salary, equity, company_handle, date_posted) 
-  VALUES ('bluntroller', 3000000, 1, VOL, LOCALTIMESTAMP) 
-  RETURNING handle, name, num_employees, description, logo_url
+  VALUES ('bluntroller', 3000000, 1, 'VOL', LOCALTIMESTAMP) 
+  RETURNING id, title, salary, equity, company_handle, date_posted
   `);
+
+  first_job_id = firstJobQuery.rows[0].id
+  second_job_id = secondJobQuery.rows[0].id
+  third_job_id = thirdJobQuery.rows[0].id
+  no_job_id = await third_job_id + 1;
 });
 
 
@@ -66,9 +54,7 @@ afterEach(async () => {
 });
 
 afterAll(async () => {
-  await db.query(`DROP TABLE companies`);
-  await db.query(`DROP TABLE jobs`);
-  db.end();
+  await db.end();
 });
 
 describe('GET /', () => {
@@ -77,7 +63,7 @@ describe('GET /', () => {
       '/jobs?search=Jan'
     );
     expect(response.body.jobs.length).toEqual(1);
-    expect(response.body.jobs[0].handle).toEqual('LLL');
+    expect(response.body.jobs[0].company_handle).toEqual('MCD');
     expect(response.status).toEqual(200);
     expect(Object.keys(response.body.jobs[0]).length).toEqual(2);
   });
@@ -88,14 +74,14 @@ describe('GET /', () => {
     );
     expect(response2.body.jobs.length).toEqual(2);
     expect(Object.keys(response2.body.jobs[0]).length).toEqual(2);
-    expect(response2.body.jobs[0].handle).toEqual('VOL' || 'LLL');
+    expect(response2.body.jobs[0].company_handle).toEqual('VOL');
   });
 
   it('should filter based on just on min_equity', async function () {
     let response3 = await request(app).get(
       '/jobs?min_equity=0.75'
     );
-    expect(response3.body.jobs[0].handle).toEqual('VOL');
+    expect(response3.body.jobs[0].company_handle).toEqual('VOL');
     expect(response3.body.jobs[0].title).toEqual('bluntroller');
     expect(Object.keys(response3.body.jobs[0]).length).toEqual(2);
   });
@@ -104,7 +90,7 @@ describe('GET /', () => {
     let response3 = await request(app).get(
       '/jobs?min_equity=0.4&min_salary=30000'
     );
-    expect(response3.body.jobs[0].handle).toEqual('VOL' || 'LLL');
+    expect(response3.body.jobs[0].company_handle).toEqual('VOL');
     expect(Object.keys(response3.body.jobs[0]).length).toEqual(2);
   });
 
@@ -112,7 +98,7 @@ describe('GET /', () => {
     let response3 = await request(app).get(
       '/jobs?search=o&min_salary=20000'
     );
-    expect(response3.body.jobs[0].handle).toEqual('VOL' || 'LLL');
+    expect(response3.body.jobs[0].company_handle).toEqual('VOL');
     expect(Object.keys(response3.body.jobs[0]).length).toEqual(2);
   });
 
@@ -120,8 +106,8 @@ describe('GET /', () => {
     let response3 = await request(app).get(
       '/jobs?min_equity=0&search=o'
     );
-    expect(response3.body.jobs[0].handle).toEqual('VOL' || 'LLL' || 'MCD');
-    expect(response3.body.jobs.length).toEqual(3);
+    expect(response3.body.jobs[0].company_handle).toEqual('VOL');
+    expect(response3.body.jobs.length).toEqual(2);
     expect(Object.keys(response3.body.jobs[0]).length).toEqual(2);
   });
 
@@ -129,42 +115,40 @@ describe('GET /', () => {
     let response3 = await request(app).get(
       '/jobs?min_salary=3000&min_equity=0.1&search=L'
     );
-    expect(response3.body.jobs[0].handle).toEqual('VOL' || 'LLL');
+    expect(response3.body.jobs[0].company_handle).toEqual('VOL');
     expect(response3.body.jobs.length).toEqual(2);
     expect(Object.keys(response3.body.jobs[0]).length).toEqual(2);
   });
 });
 
-describe('GET /', () => {
+describe('GET /:id', () => {
   it('it should get the data for one job based on the id', async function () {
     let response = await request(app).get(
-      '/jobs/1'
+      `/jobs/${first_job_id}`
     );
     expect(response.status).toEqual(200);
     expect(response.body.job.title).toEqual('Janitor');
-    expect(response.body.job.comapany_handle).toEqual('MCD');
-    expect(Object.keys(response.body.jobs[0]).length).toEqual(2);
+    expect(response.body.job.company_handle).toEqual('MCD');
+    expect(Object.keys(response.body.job).length).toEqual(5);
   });
   it('Ensures that error status is 404 if job not there', async function () {
-    let response = await request(app).delete('/jobs/50');
+    let response = await request(app).get(`/jobs/${no_job_id}`);
 
     expect(response.status).toEqual(404);
     expect(response.error.text).toEqual(
-      '{"error":{"status":404},"message":"There exists no jobs with an id of 50"}'
+      `{"error":{"status":404},"message":"There exists no job with an id of ${no_job_id}"}`
     );
   });
 });
 
 describe('post /', () => {
   it('Creates new job and receive JSON with job info', async function () {
-    let response = await request(app)
-      .post('/jobs')
-      .send({
-        title: 'Tree Trimmer',
-        salary: '1',
-        equity: 0.5,
-        comapany_handle: 'LLL',
-      });
+    let response = await request(app).post('/jobs').send({
+      title: 'Tree Trimmer',
+      salary: 1,
+      equity: 0.5,
+      company_handle: 'LLL'
+    });
     expect(response.body.job.title).toEqual('Tree Trimmer');
     let data = await db.query('select * from jobs');
     expect(data.rows.length).toEqual(4);
@@ -174,9 +158,9 @@ describe('post /', () => {
     let response = await request(app)
       .post('/companies')
       .send({
-        salary: '1',
+        salary: 1,
         equity: 0.5,
-        comapany_handle: 'LLL',
+        company_handle: 'LLL',
       });
     expect(response.status).toEqual(500);
     // what msg should it have?
@@ -187,7 +171,7 @@ describe('post /', () => {
 describe('patch /', () => {
   it('Ensures that patch updates correctly', async function () {
     let response = await request(app)
-      .patch('/jobs/3')
+      .patch(`/jobs/${third_job_id}`)
       .send({
         title: 'Nun'
       });
@@ -205,17 +189,17 @@ describe('patch /', () => {
 
 describe('delete /', () => {
   it('Ensures that delete route works correctly', async function () {
-    let response = await request(app).delete('/jobs/1');
+    let response = await request(app).delete(`/jobs/${first_job_id}`);
 
     expect(response.status).toEqual(200);
     expect(response.body.message).toEqual('Job Deleted!!!');
   });
 
   it('Ensures that error status is 404 if company not there', async function () {
-    let response = await request(app).delete('/companies/50');
+    let response = await request(app).delete(`/jobs/${no_job_id}`);
 
     expect(response.status).toEqual(404);
     // Come back to this once route created!
-    expect(response.error.text).toEqual('Not Found');
+    expect(response.error.text).toEqual('{\"error\":{\"status\":404},\"message\":\"Not Found\"}');
   });
 });

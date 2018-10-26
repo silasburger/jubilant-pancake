@@ -1,0 +1,78 @@
+{
+  "definitions": {},
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/root.json",
+  "type": "object",
+  "title": "The Root Schema",
+  "properties": {
+    "username": {
+      "$id": "#/properties/username",
+      "type": "string",
+      "title": "The Username Schema",
+      "default": "",
+      "examples": [
+        "H_Blazer"
+      ],
+      "pattern": "^(.*)$"
+    },
+    "password": {
+      "$id": "#/properties/password",
+      "type": "string",
+      "title": "The Password Schema",
+      "default": "",
+      "examples": [
+        "iLuvJ.O."
+      ],
+      "pattern": "^(.*)$"
+    },
+    "first_name": {
+      "$id": "#/properties/first_name",
+      "type": "string",
+      "title": "The First_name Schema",
+      "default": "",
+      "examples": [
+        "Hasier"
+      ],
+      "pattern": "^(.*)$"
+    },
+    "last_name": {
+      "$id": "#/properties/last_name",
+      "type": "string",
+      "title": "The Last_name Schema",
+      "default": "",
+      "examples": [
+        "Pastor"
+      ],
+      "pattern": "^(.*)$"
+    },
+    "email": {
+      "$id": "#/properties/email",
+      "type": "string",
+      "title": "The Email Schema",
+      "default": "",
+      "examples": [
+        "pastor@hasier.com"
+      ],
+      "pattern": "^(.*)$"
+    },
+    "photo_url": {
+      "$id": "#/properties/photo_url",
+      "type": "string",
+      "title": "The Photo_url Schema",
+      "default": "",
+      "examples": [
+        "http://pix.com/gross.jpeg"
+      ],
+      "pattern": "^(.*)$"
+    },
+    "is_Admin": {
+      "$id": "#/properties/is_Admin",
+      "type": "boolean",
+      "title": "The Is_admin Schema",
+      "default": false,
+      "examples": [
+        false
+      ]
+    }
+  }
+}

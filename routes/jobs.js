@@ -7,7 +7,7 @@ const validateJsonSchema = require('../helpers/validateJsonSchema');
 
 
 // Takes query string and returns filtered result in JSON
-// => {jobs: [JobData, ...]}
+// => { jobs: jobRes.rows }
 router.get('/', async function (req, res, next) {
   try {
     const result = await Job.getMatchedJobs(req.query);
@@ -17,17 +17,19 @@ router.get('/', async function (req, res, next) {
   }
 });
 
+//gets job based on id in parameter 
+//return { jobs: jobRes.rows[0] }
 router.get('/:id', async function (req, res, next) {
   try {
-    const result = await Job.get(req.params.id);
-    return res.json(result);
+    const job = await Job.get(req.params.id);
+    return res.json({ job });
   } catch (err) {
     return next(err);
   }
 });
 
 //Add Job to database, using validation middleware to check req.body.
-// => {Job: JobData}
+// => { job: jobRes.rows[0] }
 router.post('/', validateJsonSchema(postJobSchema), async function (req, res, next) {
   try {
     const result = await Job.create(req.body);
@@ -38,7 +40,7 @@ router.post('/', validateJsonSchema(postJobSchema), async function (req, res, ne
 });
 
 //Update Job in database, using validation middleware to check req.body.
-// => {Job: JobData}
+// => { job: jobRes.rows[0] }
 router.patch('/:id', validateJsonSchema(patchJobSchema), async function (req, res, next) {
   try {
     const result = await Job.update(req.body, req.params.id);

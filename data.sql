@@ -15,3 +15,13 @@
     date_posted timestamp without time zone NOT NULL
   );
 
+ CREATE TABLE users (
+    username TEXT PRIMARY KEY,
+    password TEXT NOT NULL,
+    first_name TEXT NOT NULL,
+    last_name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    photo_url TEXT, 
+    is_admin BOOLEAN NOT NULL DEFAULT false
+  );
+

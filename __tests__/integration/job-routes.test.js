@@ -131,6 +131,7 @@ describe('GET /:id', () => {
     expect(response.body.job.company_handle).toEqual('MCD');
     expect(Object.keys(response.body.job).length).toEqual(5);
   });
+
   it('Ensures that error status is 404 if job not there', async function () {
     let response = await request(app).get(`/jobs/${no_job_id}`);
 

@@ -39,7 +39,7 @@ class User {
         console.log(await bcrypt.compare(hashedPassword, user.password));
         if(await bcrypt.compare(hashedPassword, user.password)) {
           console.log('here');
-          let token = jwt.sign({username}, SECRET, options);
+          let token = jwt.sign({username}, SECRET, OPTIONS);
           return { token };
         }
       }

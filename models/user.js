@@ -1,6 +1,9 @@
 const db = require('../db');
 const bcrypt = require('bcrypt');
 const partialUpdate = require('../helpers/partialUpdate');
+const {SECRET} = require('../config');
+const OPTIONS = { expiresIn: 60 * 60 };
+const jwt = require("jsonwebtoken");
 
 class User {
 
@@ -19,8 +22,28 @@ class User {
       RETURNING username, first_name, last_name, email, photo_url`,
       [username, hashedPassword, first_name, last_name, email, photo_url, is_admin]
     );
-    console.log(userRes.rows[0], "blaksgagads")
     return userRes.rows[0];
+  }
+
+  //take username and password
+  //hash password
+  //pull hashed password from db where username matches
+  //check if hashed password matches 
+  static async login({username, password}) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const res = await db.query(
+        ` SELECT password FROM users WHERE username = $1`
+        , [username]);
+      const user = res.rows[0];
+      if(user) {
+        console.log(await bcrypt.compare(hashedPassword, user.password));
+        if(await bcrypt.compare(hashedPassword, user.password)) {
+          console.log('here');
+          let token = jwt.sign({username}, SECRET, options);
+          return { token };
+        }
+      }
+      return { message: 'Invalid credentials'};
   }
 
   //gets all users from users table
@@ -61,7 +84,6 @@ class User {
     const query = partialUpdate('users', changeObj, 'username', username);
     const userRes = await db.query(query.query, query.values);
 
-    console.log(userRes.rows);
     if (userRes.rows.length === 0) {
       let notFoundError = new Error(
         `There exists no users with a username of ${username}`
@@ -92,7 +114,6 @@ class User {
 
     return true;
   }
-
 }
 
 module.exports = User;

@@ -30,14 +30,14 @@ class User {
   //pull hashed password from db where username matches
   //check if hashed password matches 
   static async login({username, password}) {
-      const hashedPassword = await bcrypt.hash(password, 10);
       const res = await db.query(
         ` SELECT password FROM users WHERE username = $1`
         , [username]);
       const user = res.rows[0];
       if(user) {
-        console.log(await bcrypt.compare(hashedPassword, user.password));
-        if(await bcrypt.compare(hashedPassword, user.password)) {
+        console.log(user.password);
+        console.log(await bcrypt.compare(username, user.password));
+        if(await bcrypt.compare(username, user.password)) {
           console.log('here');
           let token = jwt.sign({username}, SECRET, OPTIONS);
           return { token };

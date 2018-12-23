@@ -4,10 +4,12 @@ const postCompanySchema = require('../schema/postCompanySchema');
 const patchCompanySchema = require('../schema/patchCompanySchema');
 const Company = require('../models/company.js');
 const validateJsonSchema = require('../helpers/validateJsonSchema');
+const ensureLoggedIn = require('../middleware/auth');
+const isAdmin = require('../middleware/auth');
 
 // Takes query string and returns filtered result in JSON
 // => {companies: [companyData, ...]}
-router.get('/', async function (req, res, next) {
+router.get('/', ensureLoggedIn, async function (req, res, next) {
   try {
     const { search, min_employees, max_employees } = req.query;
 
@@ -23,7 +25,7 @@ router.get('/', async function (req, res, next) {
   }
 });
 
-router.get('/:handle', async function (req, res, next) {
+router.get('/:handle', ensureLoggedIn, async function (req, res, next) {
   try {
     const handle = req.params.handle;
     const result = await Company.get(handle);
@@ -36,7 +38,7 @@ router.get('/:handle', async function (req, res, next) {
 
 //Add company to database, using validation middleware to check req.body.
 // => {company: companyData}
-router.post('/', validateJsonSchema(postCompanySchema), async function (req, res, next) {
+router.post('/', isAdmin, validateJsonSchema(postCompanySchema), async function (req, res, next) {
   try {
     const result = await Company.create(req.body);
     return res.json(result);
@@ -47,7 +49,7 @@ router.post('/', validateJsonSchema(postCompanySchema), async function (req, res
 
 //Update company in database, using validation middleware to check req.body.
 // => {company: companyData}
-router.patch('/:handle', validateJsonSchema(patchCompanySchema), async function (req, res, next) {
+router.patch('/:handle', isAdmin, validateJsonSchema(patchCompanySchema), async function (req, res, next) {
   try {
     const result = await Company.update(req.body, req.params.handle);
     return res.json(result);
@@ -58,7 +60,7 @@ router.patch('/:handle', validateJsonSchema(patchCompanySchema), async function 
 
 // Delete company from database
 // => {message: "Company deleted"}
-router.delete('/:handle', async function (req, res, next) {
+router.delete('/:handle', isAdmin, async function (req, res, next) {
   try {
     const result = await Company.delete(req.params.handle);
 

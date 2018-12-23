@@ -4,7 +4,7 @@ const postUserSchema = require('../schema/postUserSchema');
 const patchUserSchema = require('../schema/patchUserSchema');
 const User = require('../models/User.js');
 const validateJsonSchema = require('../helpers/validateJsonSchema');
-//import validation stuff
+const ensureCorrectUser = require('../middleware/auth');
 
 // Gets all users
 // => { users: userInfos }
@@ -41,7 +41,7 @@ router.post('/', validateJsonSchema(postUserSchema), async function (req, res, n
 
 //Update User in database, using validation middleware to check req.body.
 // => { user: updatedUser }
-router.patch('/:username', validateJsonSchema(patchUserSchema), async function (req, res, next) {
+router.patch('/:username', ensureCorrectUser, validateJsonSchema(patchUserSchema), async function (req, res, next) {
   try {
     const user = await User.update(req.body, req.params.username);
     return res.json({ user });
@@ -52,7 +52,7 @@ router.patch('/:username', validateJsonSchema(patchUserSchema), async function (
 
 //Update User in database, using validation middleware to check req.body.
 // => { user: updatedUser }
-router.delete('/:username', async function (req, res, next) {
+router.delete('/:username', ensureCorrectUser, async function (req, res, next) {
   try {
     //We are just checking to see if this query raises an error, if it doesn't the res
     //will always be true
